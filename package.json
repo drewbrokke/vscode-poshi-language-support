@@ -1,0 +1,66 @@
+{
+	"name": "poshi-language-support",
+	"displayName": "poshi-language-support",
+	"description": "Language Features for Liferay's Poshi Language",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.64.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onLanguage:poshi"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"grammars": [
+			{
+				"language": "poshi",
+				"path": "./syntaxes/poshi.tmLanguage.json",
+				"scopeName": "source.poshi"
+			}
+		],
+		"languages": [
+			{
+				"aliases": [
+					"Poshi",
+					"poshi"
+				],
+				"configuration": "./language-configuration.json",
+				"extensions": [
+					".function",
+					".macro",
+					".testcase"
+				],
+				"id": "poshi"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.2.0",
+		"@types/lodash": "^4.14.178",
+		"@types/mocha": "^9.1.0",
+		"@types/node": "14.x",
+		"@types/vscode": "^1.64.0",
+		"@typescript-eslint/eslint-plugin": "^5.12.1",
+		"@typescript-eslint/parser": "^5.12.1",
+		"@vscode/test-electron": "^2.1.2",
+		"eslint": "^8.9.0",
+		"glob": "^7.2.0",
+		"mocha": "^9.2.1",
+		"typescript": "^4.5.5"
+	},
+	"dependencies": {
+		"@vscode/ripgrep": "^1.14.2",
+		"lodash": "^4.17.21"
+	}
+}
