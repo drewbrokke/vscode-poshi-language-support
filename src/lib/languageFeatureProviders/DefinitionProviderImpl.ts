@@ -27,12 +27,12 @@ const tokenTypePatternMap: {
 	{
 		// matches: Class|Name
 		// matches Class|Name.methodName
-		pattern: /\b([A-Z][A-Za-z]+)/g,
+		pattern: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,
 		type: 'className',
 	},
 	{
 		// matches ClassName.method|Name
-		pattern: /\b([A-Z][A-Za-z]+)\.([a-z_][A-Za-z]+)/g,
+		pattern: /[^\w\.]([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
 		type: 'methodInvocation',
 	},
 ];
