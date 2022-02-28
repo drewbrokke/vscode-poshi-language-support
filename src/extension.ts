@@ -13,14 +13,14 @@ export function activate(context: vscode.ExtensionContext) {
 		'Congratulations, your extension "poshi-language-support" is now active!',
 	);
 
-	context.subscriptions.push(
-		vscode.languages.registerCompletionItemProvider(
-			{ pattern: '**/*.{function,macro,testcase}' },
-			new CompletionItemProviderImpl(context),
-			'.',
-			' ',
-		),
-	);
+	// context.subscriptions.push(
+	// 	vscode.languages.registerCompletionItemProvider(
+	// 		{ pattern: '**/*.{function,macro,testcase}' },
+	// 		new CompletionItemProviderImpl(context),
+	// 		'.',
+	// 		' ',
+	// 	),
+	// );
 	context.subscriptions.push(
 		vscode.languages.registerDefinitionProvider(
 			{
