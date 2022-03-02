@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
-import { rgPath } from '@vscode/ripgrep';
-import { spawn } from 'child_process';
 import * as _ from 'lodash';
+
+import { ripgrep } from '../ripgrep';
+import { isGoToDefinitionEnabled } from '../configurationProvider';
 
 type TokenType =
 	| 'className'
@@ -108,16 +109,11 @@ const getMethodLocations = async (
 		return;
 	}
 
-	const paths = files.map((uri) => uri.fsPath);
-
-	const ripgrepProcess = spawn(rgPath, ['--vimgrep', search, '--', ...paths]);
-
-	let text = '';
-	for await (const chunk of ripgrepProcess.stdout) {
-		text += chunk;
-	}
-
-	const lines = text.trim().split('\n');
+	const lines = await ripgrep({
+		search,
+		paths: files.map((uri) => uri.fsPath),
+		args: ['--vimgrep'],
+	});
 
 	return lines.map((s) => {
 		const [filepath, lineNumber, columnNumber] = s.split(':');
@@ -127,8 +123,6 @@ const getMethodLocations = async (
 				path: filepath,
 				scheme: 'file',
 			}),
-
-			// Not sure why, but each values needs to be decreased by one in order to accurately navigate
 
 			new vscode.Position(
 				Number(lineNumber) - 1,
@@ -143,6 +137,10 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 		document: vscode.TextDocument,
 		position: vscode.Position,
 	): Promise<vscode.Definition | undefined> {
+		if (!isGoToDefinitionEnabled()) {
+			return;
+		}
+
 		const token = getToken(document.lineAt(position), position);
 
 		if (!token) {
