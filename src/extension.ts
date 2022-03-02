@@ -1,8 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { CompletionItemProviderImpl } from './lib/languageFeatureProviders/CompletionItemProviderImpl';
 import { DefinitionProviderImpl } from './lib/languageFeatureProviders/DefinitionProviderImpl';
+import { DocumentFormattingEditProviderImpl } from './lib/languageFeatureProviders/DocumentFormattingEditProviderImpl';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -27,6 +27,15 @@ export function activate(context: vscode.ExtensionContext) {
 				pattern: '**/*.{function,macro,testcase}',
 			},
 			new DefinitionProviderImpl(),
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.languages.registerDocumentFormattingEditProvider(
+			{
+				pattern: '**/*.{function,macro,testcase}',
+			},
+			new DocumentFormattingEditProviderImpl(),
 		),
 	);
 
