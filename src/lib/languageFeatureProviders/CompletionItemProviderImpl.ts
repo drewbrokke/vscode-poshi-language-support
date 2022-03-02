@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { rgPath } from '@vscode/ripgrep';
-import { spawn } from 'child_process';
 import * as _ from 'lodash';
+import { ripgrep } from '../ripgrep';
+import { isCompletionEnabled } from '../configurationProvider';
 
 const classNamePattern = /\b[A-Z][A-Za-z]+/g;
 
@@ -85,6 +85,10 @@ export class CompletionItemProviderImpl
 		_token: vscode.CancellationToken,
 		context: vscode.CompletionContext,
 	): Promise<vscode.CompletionList | undefined> {
+		if (!isCompletionEnabled()) {
+			return;
+		}
+
 		const line: vscode.TextLine = document.lineAt(position);
 
 		if (line.isEmptyOrWhitespace) {
@@ -115,23 +119,6 @@ export class CompletionItemProviderImpl
 					false,
 				);
 			}
-			return new vscode.CompletionList(
-				[
-					new vscode.CompletionItem(
-						'property.a',
-						vscode.CompletionItemKind.Property,
-					),
-					new vscode.CompletionItem(
-						'property.b',
-						vscode.CompletionItemKind.Property,
-					),
-					new vscode.CompletionItem(
-						'property.c',
-						vscode.CompletionItemKind.Property,
-					),
-				],
-				false,
-			);
 		}
 
 		if (context.triggerCharacter === '.') {
@@ -157,7 +144,9 @@ export class CompletionItemProviderImpl
 			context.triggerCharacter === ' ' &&
 			isCompleteProperty(line, position)
 		) {
-			const workspaceFolder = this._getWorkspaceFolder(document);
+			const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+				document.uri,
+			);
 
 			if (workspaceFolder) {
 				const props = await this._getProps(workspaceFolder.uri);
@@ -176,34 +165,22 @@ export class CompletionItemProviderImpl
 			) as string[];
 		}
 
-		const ripgrepProcess = spawn(rgPath, [
-			'--case-sensitive',
-			'--glob',
-			'*test.properties',
-			'--glob',
-			'*portal*.properties',
-			'--no-filename',
-			'--no-heading',
-			'--no-line-number',
-			'--only-matching',
-			'--replace',
-			'$1',
-			'^s*([a-z][^#={( ]+?)=',
-			'--',
-			workspaceUri.fsPath,
-		]);
+		let lines = await ripgrep({
+			search: '^s*([a-z][^#={( ]+?)=',
+			paths: [workspaceUri.fsPath],
+			globs: ['*test.properties', '*portal*.properties'],
+			args: [
+				'--case-sensitive',
+				'--no-filename',
+				'--no-heading',
+				'--no-line-number',
+				'--only-matching',
+				'--replace',
+				'$1',
+			],
+		});
 
-		let text = '';
-		for await (const chunk of ripgrepProcess.stdout) {
-			text += chunk;
-		}
-
-		const props = _.chain(text)
-			.split('\n')
-			.compact()
-			.sort()
-			.sortedUniq()
-			.value();
+		const props = _.chain(lines).compact().sort().sortedUniq().value();
 
 		this.extensionContext.workspaceState.update('props', props);
 
@@ -227,35 +204,23 @@ export class CompletionItemProviderImpl
 			`**/${functionOrMacroFileBaseName}.{function,macro}`,
 		);
 
-		const ripgrepProcess = spawn(rgPath, [
-			'--only-matching',
-			'--no-filename',
-			'--no-line-number',
-			'--replace',
-			'$2',
-			'(macro|function) ([_a-zA-Z]+)',
-			'--',
-			uris[0].fsPath,
-		]);
-
-		let text = '';
-		for await (const chunk of ripgrepProcess.stdout) {
-			text += chunk;
-		}
-
-		const completionItems = text.split('\n');
+		const functionOrMacroNames = ripgrep({
+			search: '(macro|function) ([_a-zA-Z]+)',
+			paths: [uris[0].fsPath],
+			args: [
+				'--only-matching',
+				'--no-filename',
+				'--no-line-number',
+				'--replace',
+				'$2',
+			],
+		});
 
 		this.extensionContext.workspaceState.update(
 			functionOrMacroFileBaseName,
-			completionItems,
+			functionOrMacroNames,
 		);
 
-		return completionItems;
-	}
-
-	private _getWorkspaceFolder(
-		document: vscode.TextDocument,
-	): vscode.WorkspaceFolder | undefined {
-		return vscode.workspace.getWorkspaceFolder(document.uri);
+		return functionOrMacroNames;
 	}
 }
