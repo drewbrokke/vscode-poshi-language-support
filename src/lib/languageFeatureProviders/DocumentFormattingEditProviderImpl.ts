@@ -1,9 +1,7 @@
-import { spawn, spawnSync } from 'child_process';
 import * as vscode from 'vscode';
 
-const sfHome =
-	'/Users/drewbrokke/Documents/liferay/liferay-portal/tools/sdk/dist';
-const sfPath = `${sfHome}/com.liferay.source.formatter.standalone-1.0.1.jar`;
+import { isFormattingEnabled } from '../configurationProvider';
+import { getSourceFormatterOutput } from '../sourceFormatter';
 
 export class DocumentFormattingEditProviderImpl
 	implements vscode.DocumentFormattingEditProvider
@@ -13,41 +11,15 @@ export class DocumentFormattingEditProviderImpl
 		options: vscode.FormattingOptions,
 		token: vscode.CancellationToken,
 	): Promise<vscode.TextEdit[] | undefined> {
-		let text = '';
-
-		try {
-			const javaProcess = spawn(
-				'java',
-				[
-					// '-Xdebug',
-					// '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005',
-					'-jar',
-					sfPath,
-					'-Dcommit.count=0',
-					'-Dsource.auto.fix=false',
-					'-Dshow.debug.information=true',
-					`-Dsource.files=${document.fileName}`,
-				],
-				{
-					cwd: sfHome,
-				},
-			);
-
-			for await (const chunk of javaProcess.stdout) {
-				text += chunk;
-			}
-		} catch (error) {
-			const err = error as Error;
-			console.error(err);
-
-			vscode.window.showInformationMessage(err.message);
-
+		if (!isFormattingEnabled()) {
 			return;
 		}
 
-		const sfOutput = text.trim();
+		const sfOutput = await getSourceFormatterOutput(document.fileName);
 
-		console.log(sfOutput);
+		if (!sfOutput) {
+			return;
+		}
 
 		const textEdits = [];
 
@@ -137,6 +109,7 @@ export class DocumentFormattingEditProviderImpl
 			);
 		}
 
+		// Sort in descending order so that later edits are applied first and line numbers stay relevant
 		textEdits.sort((a, b) => {
 			if (a.range.start.isBefore(b.range.start)) {
 				return 1;
@@ -146,8 +119,6 @@ export class DocumentFormattingEditProviderImpl
 				return 0;
 			}
 		});
-
-		console.log('edits compiled');
 
 		return textEdits;
 	}
