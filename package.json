@@ -1,5 +1,6 @@
 {
 	"name": "poshi-language-support",
+	"publisher": "LiferayInc",
 	"displayName": "poshi-language-support",
 	"description": "Language Features for Liferay's Poshi Language",
 	"version": "0.0.1",
