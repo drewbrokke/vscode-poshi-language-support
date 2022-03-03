@@ -1,9 +1,18 @@
-const CONFI_COMPLETION_ENABLED = false;
-const CONFIG_FORMATTING_ENABLED = true;
-const CONFIG_GO_TO_DEFINITION_ENABLED = true;
-const CONFIG_SOURCE_FORMATTER_JAR_PATH = process.env.VSCODE_POSHI_EXTENSION_SOURCE_FORMATTER_JAR_PATH || '';
+import * as vscode from 'vscode';
 
-export const isCompletionEnabled = () => CONFI_COMPLETION_ENABLED;
-export const isFormattingEnabled = () => CONFIG_FORMATTING_ENABLED;
-export const isGoToDefinitionEnabled = () => CONFIG_GO_TO_DEFINITION_ENABLED;
-export const sourceFormatterJarPath = () => CONFIG_SOURCE_FORMATTER_JAR_PATH;
+let configuration = vscode.workspace.getConfiguration('poshi');
+
+vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+    if (event.affectsConfiguration('poshi')) {
+        configuration = vscode.workspace.getConfiguration('poshi');
+    }
+});
+
+export const isCompletionEnabled = (): boolean =>
+	configuration.get('completion.enabled', false);
+export const isSourceFormatterEnabled = (): boolean =>
+	configuration.get('sourceFormatter.enabled', false);
+export const isGoToDefinitionEnabled = (): boolean =>
+	configuration.get('goToDefinition.enabled', true);
+export const sourceFormatterJarPath = (): string =>
+	configuration.get('sourceFormatter.jarPath', '');

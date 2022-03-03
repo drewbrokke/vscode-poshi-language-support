@@ -14,6 +14,32 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"configuration": {
+			"title": "Poshi",
+			"properties": {
+				"poshi.completion.enabled": {
+					"description": "Specifies whether or not to enable auto-completion.",
+					"default": false,
+					"type": "boolean"
+				},
+				"poshi.goToDefinition.enabled": {
+					"description": "Specifies whether or not to enable go-to-definition.",
+					"default": true,
+					"type": "boolean"
+				},
+				"poshi.sourceFormatter.enabled": {
+					"description": "Specifies whether the to use Liferay's Source Formatter as the formatter for Poshi files.",
+					"default": false,
+					"type": "boolean"
+				},
+				"poshi.sourceFormatter.jarPath": {
+					"markdownDescription": "The path to the source-formatter-standalone jar. It will be invoked with `java -jar {}`.\nExample: `file:///Users/me/Documents/source-formatter-standalone.jar`",
+					"default": "",
+					"type": "string",
+					"format": "uri"
+				}
+			}
+		},
 		"grammars": [
 			{
 				"language": "poshi",

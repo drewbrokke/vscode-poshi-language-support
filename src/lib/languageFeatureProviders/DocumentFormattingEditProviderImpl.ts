@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { isFormattingEnabled } from '../configurationProvider';
+import { isSourceFormatterEnabled } from '../configurationProvider';
 import { getSourceFormatterOutput } from '../sourceFormatter';
 
 export class DocumentFormattingEditProviderImpl
@@ -11,7 +11,7 @@ export class DocumentFormattingEditProviderImpl
 		options: vscode.FormattingOptions,
 		token: vscode.CancellationToken,
 	): Promise<vscode.TextEdit[] | undefined> {
-		if (!isFormattingEnabled()) {
+		if (!isSourceFormatterEnabled()) {
 			return;
 		}
 
