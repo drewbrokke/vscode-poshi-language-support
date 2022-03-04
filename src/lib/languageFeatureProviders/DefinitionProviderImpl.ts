@@ -1,89 +1,8 @@
 import * as vscode from 'vscode';
-import { inRange as _inRange } from 'lodash';
 
 import { ripgrep } from '../ripgrep';
 import { isGoToDefinitionEnabled } from '../configurationProvider';
-
-type TokenType =
-	| 'className'
-	| 'methodInvocation'
-	| 'pathFileName'
-	| 'pathLocator';
-
-const tokenTypePatternMap: {
-	pattern: RegExp;
-	type: TokenType;
-}[] = [
-	{
-		// matches "PathFile"
-		// matches "PathFile|Name.LOCATOR_NAME"
-		pattern: /"([A-Z][A-Za-z]+)/g,
-		type: 'pathFileName',
-	},
-	{
-		// matches PathFileName.LOCATOR_N|AME
-		pattern: /"([A-Z][A-Za-z]+)#([A-Z][A-Z_-]+)"/g,
-		type: 'pathLocator',
-	},
-	{
-		// matches: Class|Name
-		// matches Class|Name.methodName
-		pattern: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,
-		type: 'className',
-	},
-	{
-		// matches ClassName.method|Name
-		pattern: /[^\w\.]([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
-		type: 'methodInvocation',
-	},
-];
-
-interface Token {
-	matches: string[];
-	type: TokenType;
-}
-
-function getTextMatchesUnderCursor(
-	lineText: string,
-	columnNumber: number,
-	regex: RegExp,
-): string[] | undefined {
-	for (const match of lineText.matchAll(regex)) {
-		const { index } = match;
-
-		if (index === undefined) {
-			continue;
-		}
-
-		if (index === -1) {
-			continue;
-		}
-
-		if (_inRange(columnNumber, index, index + match[0].length)) {
-			return Array.from(match);
-		}
-	}
-}
-
-const getToken = (
-	line: vscode.TextLine,
-	position: vscode.Position,
-): Token | undefined => {
-	for (const { type, pattern } of tokenTypePatternMap) {
-		let matches = getTextMatchesUnderCursor(
-			line.text,
-			position.character,
-			new RegExp(pattern),
-		);
-
-		if (matches !== undefined) {
-			return {
-				matches,
-				type,
-			};
-		}
-	}
-};
+import { getToken } from '../tokens';
 
 const getFileLocations = async (
 	glob: string,
@@ -141,7 +60,10 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 			return;
 		}
 
-		const token = getToken(document.lineAt(position), position);
+		const line = document.lineAt(position);
+
+		const token = getToken(
+			line.text, position.character);
 
 		if (!token) {
 			return;
