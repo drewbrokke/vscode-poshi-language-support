@@ -1,6 +1,10 @@
 {
 	"name": "poshi-language-support",
 	"publisher": "LiferayInc",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/drewbrokke/vscode-poshi-language-support"
+	},
 	"displayName": "poshi-language-support",
 	"description": "Language Features for Liferay's Poshi Language",
 	"version": "0.0.1",
