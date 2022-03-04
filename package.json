@@ -12,7 +12,12 @@
 		"vscode": "^1.64.0"
 	},
 	"categories": [
-		"Other"
+		"Programming Languages",
+		"Testing"
+	],
+	"keywords": [
+		"liferay",
+		"poshi"
 	],
 	"activationEvents": [
 		"onLanguage:poshi"
