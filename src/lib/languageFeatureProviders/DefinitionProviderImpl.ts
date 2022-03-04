@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as _ from 'lodash';
+import { inRange as _inRange } from 'lodash';
 
 import { ripgrep } from '../ripgrep';
 import { isGoToDefinitionEnabled } from '../configurationProvider';
@@ -59,7 +59,7 @@ function getTextMatchesUnderCursor(
 			continue;
 		}
 
-		if (_.inRange(columnNumber, index, index + match[0].length)) {
+		if (_inRange(columnNumber, index, index + match[0].length)) {
 			return Array.from(match);
 		}
 	}

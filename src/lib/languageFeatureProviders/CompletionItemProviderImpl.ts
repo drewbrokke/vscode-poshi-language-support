@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as _ from 'lodash';
+import { chain as _chain } from 'lodash';
 import { ripgrep } from '../ripgrep';
 import { isCompletionEnabled } from '../configurationProvider';
 
@@ -180,7 +180,7 @@ export class CompletionItemProviderImpl
 			],
 		});
 
-		const props = _.chain(lines).compact().sort().sortedUniq().value();
+		const props = _chain(lines).compact().sort().sortedUniq().value();
 
 		this.extensionContext.workspaceState.update('props', props);
 
