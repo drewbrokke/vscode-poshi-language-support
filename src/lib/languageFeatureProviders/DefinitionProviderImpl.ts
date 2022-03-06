@@ -98,7 +98,7 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 			case 'liferaySeleniumMethod':
 				return getMethodLocations(
 					`**/poshi-runner/**/selenium/BaseWebDriverImpl.java`,
-					`public (void|String|boolean|TargetLocator|Options|int) ${token.matches[2]}`,
+					`public .* ${token.matches[2]}`,
 				);
 			case 'utilClass':
 				return getFileLocations(
@@ -109,7 +109,7 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 
 				return getMethodLocations(
 					`**/poshi/**/${utilFileName}.java`,
-					`public static (void|String|boolean|int) ${utilMethodName}`,
+					`public static .* ${utilMethodName}`,
 				);
 		}
 	}
