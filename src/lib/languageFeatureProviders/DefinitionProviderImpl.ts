@@ -116,7 +116,14 @@ const getMethodLocations = async (
 	});
 
 	return lines.map((s) => {
-		const [filepath, lineNumber, columnNumber] = s.split(':');
+		if (process.platform === "win32") {
+			var [drive, filepath, lineNumber,columnNumber] = s.split(':');
+
+			var filepath = drive + ":" + filepath;
+		}
+		else {
+			var [filepath, lineNumber, columnNumber] = s.split(':');
+		}
 
 		return new vscode.Location(
 			vscode.Uri.from({
