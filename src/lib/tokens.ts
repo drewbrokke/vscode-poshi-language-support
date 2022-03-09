@@ -25,17 +25,17 @@ const tokenTypePatternMap: {
 	{
 		// matches: Class|Name
 		// matches Class|Name.methodName
-		pattern: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,
+		pattern: /(?:^|[^\w\.])([A-Z][A-Za-z]+)[\(\.]/g,
 		type: 'className',
 	},
 	{
 		// matches ClassName.method|Name
-		pattern: /[^\w\.]([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
+		pattern: /(?:^|[^\w\.])([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
 		type: 'methodInvocation',
 	},
 ];
 
-interface Token {
+export interface Token {
 	matches: string[];
 	type: TokenType;
 }
@@ -74,6 +74,16 @@ export const getToken = (
 		);
 
 		if (matches !== undefined) {
+			console.log(
+				JSON.stringify({
+					input: text,
+					expected: {
+						matches,
+						type,
+					},
+				}),
+			);
+
 			return {
 				matches,
 				type,
