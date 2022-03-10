@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { ripgrep } from '../ripgrep';
+import { RipgrepMatch, ripgrepMatches } from '../ripgrep';
 import { isGoToDefinitionEnabled } from '../configurationProvider';
 import { getToken } from '../tokens';
 
@@ -28,27 +28,22 @@ const getMethodLocations = async (
 		return;
 	}
 
-	const lines = await ripgrep({
+	const lines = await ripgrepMatches({
 		search,
 		paths: files.map((uri) => uri.fsPath),
-		args: ['--vimgrep'],
 	});
 
-	return lines.map((s) => {
-		const [filepath, lineNumber, columnNumber] = s.split(':');
+	return lines.map(
+		(ripgrepMatch: RipgrepMatch) =>
+			new vscode.Location(
+				vscode.Uri.file(ripgrepMatch.filepath),
 
-		return new vscode.Location(
-			vscode.Uri.from({
-				path: filepath,
-				scheme: 'file',
-			}),
-
-			new vscode.Position(
-				Number(lineNumber) - 1,
-				Number(columnNumber) - 1,
+				new vscode.Position(
+					Number(ripgrepMatch.lineNumber) - 1,
+					Number(ripgrepMatch.columnNumber),
+				),
 			),
-		);
-	});
+	);
 };
 
 export class DefinitionProviderImpl implements vscode.DefinitionProvider {
