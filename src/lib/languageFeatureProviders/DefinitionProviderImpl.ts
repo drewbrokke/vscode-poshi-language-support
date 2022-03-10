@@ -1,50 +1,8 @@
 import * as vscode from 'vscode';
 
-import { RipgrepMatch, ripgrepMatches } from '../ripgrep';
 import { isGoToDefinitionEnabled } from '../configurationProvider';
+import { getFileLocations, searchFilesLines } from '../search';
 import { getToken } from '../tokens';
-
-const getFileLocations = async (
-	glob: string,
-): Promise<vscode.Location[] | undefined> => {
-	const files = await vscode.workspace.findFiles(glob);
-
-	if (files.length === 0) {
-		return;
-	}
-
-	return files.map(
-		(uri) => new vscode.Location(uri, new vscode.Position(0, 0)),
-	);
-};
-
-const getMethodLocations = async (
-	glob: string,
-	search: string,
-): Promise<vscode.Location[] | undefined> => {
-	const files = await vscode.workspace.findFiles(glob);
-
-	if (files.length === 0) {
-		return;
-	}
-
-	const lines = await ripgrepMatches({
-		search,
-		paths: files.map((uri) => uri.fsPath),
-	});
-
-	return lines.map(
-		(ripgrepMatch: RipgrepMatch) =>
-			new vscode.Location(
-				vscode.Uri.file(ripgrepMatch.filepath),
-
-				new vscode.Position(
-					Number(ripgrepMatch.lineNumber) - 1,
-					Number(ripgrepMatch.columnNumber),
-				),
-			),
-	);
-};
 
 export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 	async provideDefinition(
@@ -71,18 +29,18 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 			case 'methodInvocation':
 				const [, className, methodName] = token.matches;
 
-				return getMethodLocations(
+				return searchFilesLines(
 					`**/${className}.{function,macro}`,
-					`(macro|function) ${methodName} \\{`,
+					`(?:macro|function) (${methodName}) \\{`,
 				);
 			case 'pathFileName':
 				return getFileLocations(`**/${token.matches[1]}.path`);
 			case 'pathLocator':
 				const [, fileName, locatorName] = token.matches;
 
-				return getMethodLocations(
+				return searchFilesLines(
 					`**/${fileName}.path`,
-					`<td>${locatorName}</td>`,
+					`<td>(${locatorName})</td>`,
 				);
 		}
 	}
