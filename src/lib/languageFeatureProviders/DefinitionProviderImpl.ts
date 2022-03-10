@@ -62,8 +62,7 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 
 		const line = document.lineAt(position);
 
-		const token = getToken(
-			line.text, position.character);
+		const token = getToken(line.text, position.character);
 
 		if (!token) {
 			return;
