@@ -88,7 +88,7 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 
 				return getMethodLocations(
 					`**/${fileName}.path`,
-					`<td>${locatorName}`,
+					`<td>${locatorName}</td>`,
 				);
 		}
 	}
