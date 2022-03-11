@@ -5,12 +5,18 @@ type TokenType =
 	| 'className'
 	| 'methodInvocation'
 	| 'pathFileName'
-	| 'pathLocator';
+	| 'pathLocator'
+	| 'variable';
 
 const tokenTypePatternMap: {
 	pattern: RegExp;
 	type: TokenType;
 }[] = [
+	{
+		// matches "${vari|able}"
+		pattern: /\$\{([A-Za-z_]+)\}/g,
+		type: 'variable',
+	},
 	{
 		// matches "PathFile"
 		// matches "PathFile|Name.LOCATOR_NAME"
