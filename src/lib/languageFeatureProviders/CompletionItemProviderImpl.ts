@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { chain as _chain } from 'lodash';
-import { RipgrepMatch, ripgrepMatches } from '../ripgrep';
+import { ripgrep, RipgrepMatch, ripgrepMatches } from '../ripgrep';
 import { isCompletionEnabled } from '../configurationProvider';
 
 const classNamePattern = /\b[A-Z][A-Za-z]+/g;
@@ -159,18 +159,26 @@ export class CompletionItemProviderImpl
 	}
 
 	private async _getProps(workspaceUri: vscode.Uri): Promise<string[]> {
-		const matches: RipgrepMatch[] = await ripgrepMatches({
-			search: '^s*([a-z][^#={( ]+?)=',
-			paths: [workspaceUri.fsPath],
-			globs: ['*test.properties', '*portal*.properties'],
+		const lines: string[] = await ripgrep({
+			search: 'test.case.available.property.names=.*?\n\n',
+			paths: [
+				vscode.Uri.joinPath(workspaceUri, 'test.properties').fsPath,
+			],
+			args: ['--multiline', '--multiline-dotall'],
 		});
 
-		return _chain(matches)
-			.map((ripgrepMatch) => ripgrepMatch.captures[0])
-			.compact()
-			.sort()
-			.sortedUniq()
-			.value();
+		const results = [];
+		const pattern = new RegExp(/^\s*([a-z\.]+),\\/);
+
+		for (const line of lines) {
+			const match = line.match(pattern);
+
+			if (match) {
+				results.push(match[1]);
+			}
+		}
+
+		return results;
 	}
 
 	private async _getFunctionOrMacroNames(
