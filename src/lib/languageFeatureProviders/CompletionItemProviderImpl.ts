@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { chain as _chain } from 'lodash';
-import { ripgrep } from '../ripgrep';
+import { RipgrepMatch, ripgrepMatches } from '../ripgrep';
 import { isCompletionEnabled } from '../configurationProvider';
 
 const classNamePattern = /\b[A-Z][A-Za-z]+/g;
@@ -159,68 +159,37 @@ export class CompletionItemProviderImpl
 	}
 
 	private async _getProps(workspaceUri: vscode.Uri): Promise<string[]> {
-		if (!!this.extensionContext.workspaceState.get('props')) {
-			return this.extensionContext.workspaceState.get(
-				'props',
-			) as string[];
-		}
-
-		let lines = await ripgrep({
+		const matches: RipgrepMatch[] = await ripgrepMatches({
 			search: '^s*([a-z][^#={( ]+?)=',
 			paths: [workspaceUri.fsPath],
 			globs: ['*test.properties', '*portal*.properties'],
-			args: [
-				'--case-sensitive',
-				'--no-filename',
-				'--no-heading',
-				'--no-line-number',
-				'--only-matching',
-				'--replace',
-				'$1',
-			],
 		});
 
-		const props = _chain(lines).compact().sort().sortedUniq().value();
-
-		this.extensionContext.workspaceState.update('props', props);
-
-		return props;
+		return _chain(matches)
+			.map((ripgrepMatch) => ripgrepMatch.captures[0])
+			.compact()
+			.sort()
+			.sortedUniq()
+			.value();
 	}
 
 	private async _getFunctionOrMacroNames(
 		functionOrMacroFileBaseName: string,
 	): Promise<string[]> {
-		if (
-			!!this.extensionContext.workspaceState.get(
-				functionOrMacroFileBaseName,
-			)
-		) {
-			return this.extensionContext.workspaceState.get(
-				functionOrMacroFileBaseName,
-			) as string[];
-		}
-
 		const uris: vscode.Uri[] = await vscode.workspace.findFiles(
 			`**/${functionOrMacroFileBaseName}.{function,macro}`,
 		);
 
-		const functionOrMacroNames = ripgrep({
-			search: '(macro|function) ([_a-zA-Z]+)',
+		const matches: RipgrepMatch[] = await ripgrepMatches({
+			search: '(?:macro|function) ([_a-zA-Z]+)',
 			paths: [uris[0].fsPath],
-			args: [
-				'--only-matching',
-				'--no-filename',
-				'--no-line-number',
-				'--replace',
-				'$2',
-			],
 		});
 
-		this.extensionContext.workspaceState.update(
-			functionOrMacroFileBaseName,
-			functionOrMacroNames,
-		);
-
-		return functionOrMacroNames;
+		return _chain(matches)
+			.map((ripgrepMatch) => ripgrepMatch.captures[0])
+			.compact()
+			.sort()
+			.sortedUniq()
+			.value();
 	}
 }
