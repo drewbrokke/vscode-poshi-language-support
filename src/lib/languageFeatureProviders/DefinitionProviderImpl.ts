@@ -63,7 +63,7 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 
 				return getMethodLocations(
 					`**/${className}.{function,macro}`,
-					`(macro|function) ${methodName} \\{`,
+					`(?:macro|function) (${methodName}) \\{`,
 				);
 			case 'pathFileName':
 				return getFileLocations(`**/${token.matches[1]}.path`);
@@ -72,7 +72,7 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 
 				return getMethodLocations(
 					`**/${fileName}.path`,
-					`<td>${locatorName}</td>`,
+					`<td>(${locatorName})</td>`,
 				);
 		}
 	}
