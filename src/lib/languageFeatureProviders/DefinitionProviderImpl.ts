@@ -33,17 +33,7 @@ const getMethodLocations = async (
 		paths: files.map((uri) => uri.fsPath),
 	});
 
-	return lines.map(
-		(ripgrepMatch: RipgrepMatch) =>
-			new vscode.Location(
-				vscode.Uri.file(ripgrepMatch.filepath),
-
-				new vscode.Position(
-					Number(ripgrepMatch.lineNumber) - 1,
-					Number(ripgrepMatch.columnNumber),
-				),
-			),
-	);
+	return lines.map((ripgrepMatch: RipgrepMatch) => ripgrepMatch.location);
 };
 
 export class DefinitionProviderImpl implements vscode.DefinitionProvider {
