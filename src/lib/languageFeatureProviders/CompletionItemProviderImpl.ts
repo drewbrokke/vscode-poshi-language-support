@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { chain as _chain } from 'lodash';
 import { ripgrep } from '../ripgrep';
 import { isCompletionEnabled } from '../configurationProvider';
+import { searchGlobFilesLines } from '../search';
 
 const classNamePattern = /\b[A-Z][A-Za-z]+/g;
 
@@ -182,45 +183,22 @@ export class CompletionItemProviderImpl
 
 		const props = _chain(lines).compact().sort().sortedUniq().value();
 
-		this.extensionContext.workspaceState.update('props', props);
-
 		return props;
 	}
 
 	private async _getFunctionOrMacroNames(
 		functionOrMacroFileBaseName: string,
 	): Promise<string[]> {
-		if (
-			!!this.extensionContext.workspaceState.get(
-				functionOrMacroFileBaseName,
-			)
-		) {
-			return this.extensionContext.workspaceState.get(
-				functionOrMacroFileBaseName,
-			) as string[];
-		}
-
-		const uris: vscode.Uri[] = await vscode.workspace.findFiles(
+		const searchResults = await searchGlobFilesLines(
 			`**/${functionOrMacroFileBaseName}.{function,macro}`,
+			'(?:macro|function) ([_a-zA-Z]+)',
 		);
 
-		const functionOrMacroNames = ripgrep({
-			search: '(macro|function) ([_a-zA-Z]+)',
-			paths: [uris[0].fsPath],
-			args: [
-				'--only-matching',
-				'--no-filename',
-				'--no-line-number',
-				'--replace',
-				'$2',
-			],
-		});
-
-		this.extensionContext.workspaceState.update(
-			functionOrMacroFileBaseName,
-			functionOrMacroNames,
-		);
-
-		return functionOrMacroNames;
+		return _chain(
+			searchResults.map((searchResult) => searchResult.captureMatchText),
+		)
+			.sort()
+			.sortedUniq()
+			.value();
 	}
 }

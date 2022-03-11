@@ -1,7 +1,11 @@
 import * as vscode from 'vscode';
 
 import { isGoToDefinitionEnabled } from '../configurationProvider';
-import { getFileLocations, searchFilesLines } from '../search';
+import {
+	getFileLocations,
+	searchGlobFilesLines,
+	searchResultToLocation,
+} from '../search';
 import { getToken } from '../tokens';
 
 export class DefinitionProviderImpl implements vscode.DefinitionProvider {
@@ -21,6 +25,8 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 			return;
 		}
 
+		let searchResults = null;
+
 		switch (token.type) {
 			case 'className':
 				return getFileLocations(
@@ -29,19 +35,23 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 			case 'methodInvocation':
 				const [, className, methodName] = token.matches;
 
-				return searchFilesLines(
+				searchResults = await searchGlobFilesLines(
 					`**/${className}.{function,macro}`,
 					`(?:macro|function) (${methodName}) \\{`,
 				);
+
+				return searchResults.map(searchResultToLocation);
 			case 'pathFileName':
 				return getFileLocations(`**/${token.matches[1]}.path`);
 			case 'pathLocator':
 				const [, fileName, locatorName] = token.matches;
 
-				return searchFilesLines(
+				searchResults = await searchGlobFilesLines(
 					`**/${fileName}.path`,
 					`<td>(${locatorName})</td>`,
 				);
+
+				return searchResults.map(searchResultToLocation);
 		}
 	}
 }

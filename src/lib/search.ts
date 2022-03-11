@@ -15,25 +15,31 @@ export const getFileLocations = async (
 	);
 };
 
-export const searchFilesLines = async (
+interface SearchResult {
+	location: vscode.Location;
+	fullMatchText: string;
+	captureMatchText: string;
+}
+
+export const searchResultToLocation = (
+	searchResult: SearchResult,
+): vscode.Location => searchResult.location;
+
+export const searchGlobFilesLines = async (
 	glob: string,
 	search: string,
-): Promise<vscode.Location[]> => {
-	const files = await vscode.workspace.findFiles(glob);
+): Promise<SearchResult[]> =>
+	searchFilesLines(await vscode.workspace.findFiles(glob), search);
 
+export const searchFilesLines = async (
+	files: vscode.Uri[],
+	search: string,
+): Promise<SearchResult[]> => {
 	const regex = new RegExp(search);
-	const results = [];
+	const results: SearchResult[] = [];
 
 	for (const file of files) {
 		const bytes = await vscode.workspace.fs.readFile(file);
-
-		for await (const chunk of fs.createReadStream(file.fsPath, {
-			encoding: 'utf8',
-		})) {
-            for (const line of chunk.split('\n')) {
-                
-            }
-		}
 
 		const text = bytes.toString();
 
@@ -49,15 +55,17 @@ export const searchFilesLines = async (
 
 				const columnNumber = line.indexOf(captureText);
 
-				results.push(
-					new vscode.Location(
-						vscode.Uri.file(file.fsPath),
+				results.push({
+					location: new vscode.Location(
+						file,
 						new vscode.Position(
 							Number(lineNumber),
 							Number(columnNumber),
 						),
 					),
-				);
+					fullMatchText: match[0],
+					captureMatchText: match[1],
+				});
 			}
 		}
 	}
