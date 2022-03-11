@@ -1,5 +1,7 @@
 import { spawn } from 'child_process';
 
+import * as vscode from 'vscode';
+
 import { rgPath } from '@vscode/ripgrep';
 
 export interface RipgrepArgs {
@@ -10,9 +12,9 @@ export interface RipgrepArgs {
 }
 
 export interface RipgrepMatch {
-	filepath: string;
-	lineNumber: number;
-	columnNumber: number;
+	location: vscode.Location;
+	fullMatchText: string;
+	captures: string[];
 }
 
 export async function ripgrep(ripgrepArgs: RipgrepArgs): Promise<string[]> {
@@ -39,6 +41,22 @@ export async function ripgrep(ripgrepArgs: RipgrepArgs): Promise<string[]> {
 	return text.trim().split('\n');
 }
 
+interface RipgrepMatchData {
+	path: {
+		text: string;
+	};
+	lines: {
+		text: string;
+	};
+	['line_number']: number;
+	submatches: {
+		match: {
+			text: string;
+		};
+		start: number;
+	}[];
+}
+
 export async function ripgrepMatches(
 	ripgrepArgs: RipgrepArgs,
 ): Promise<RipgrepMatch[]> {
@@ -48,24 +66,45 @@ export async function ripgrepMatches(
 		args: [...args, '--json'],
 	});
 
-	return (
-		lines
-			.map((line) => JSON.parse(line))
-			// See https://docs.rs/grep-printer/0.1.6/grep_printer/struct.JSON.html#overview
-			.filter((obj) => obj.type === 'match')
-			.map((obj) => obj.data)
-			.reduce((acc, obj) => {
-				// See https://docs.rs/grep-printer/0.1.6/grep_printer/struct.JSON.html#message-match
+	const regex = new RegExp(ripgrepArgs.search);
 
-				for (const submatch of obj.submatches) {
-					acc.push({
-						filepath: obj.path.text,
-						lineNumber: obj.line_number,
-						columnNumber: submatch.start,
-					});
-				}
+	const results: RipgrepMatch[] = [];
 
-				return acc;
-			}, [])
-	);
+	for (const line of lines) {
+		const obj = JSON.parse(line);
+
+		if (obj.type !== 'match') {
+			continue;
+		}
+
+		const data: RipgrepMatchData = obj.data;
+
+		const filePath: string = data.path.text;
+		const lineNumber: number = Number(data.line_number);
+		const lineText: string = data.lines.text;
+
+		for (const submatch of data.submatches) {
+			let columnNumber = Number(submatch.start);
+			const submatchText: string = submatch.match.text;
+
+			const match = submatchText.match(regex);
+
+			if (match && match.length === 1) {
+				columnNumber = lineText.indexOf(match[0]);
+			} else if (match && match.length > 1) {
+				columnNumber = lineText.indexOf(match[1]);
+			}
+
+			results.push({
+				location: new vscode.Location(
+					vscode.Uri.file(filePath),
+					new vscode.Position(lineNumber - 1, columnNumber),
+				),
+				fullMatchText: submatchText,
+				captures: match ? match.slice(1) : [],
+			});
+		}
+	}
+
+	return results;
 }
