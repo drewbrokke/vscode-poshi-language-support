@@ -18,6 +18,15 @@ const getFileLocations = async (
 	);
 };
 
+const getFileMethodLocations = async (files: vscode.Uri[], search: string) => {
+	const lines = await ripgrepMatches({
+		search,
+		paths: files.map((uri) => uri.fsPath),
+	});
+
+	return lines.map((ripgrepMatch: RipgrepMatch) => ripgrepMatch.location);
+};
+
 const getMethodLocations = async (
 	glob: string,
 	search: string,
@@ -28,12 +37,7 @@ const getMethodLocations = async (
 		return;
 	}
 
-	const lines = await ripgrepMatches({
-		search,
-		paths: files.map((uri) => uri.fsPath),
-	});
-
-	return lines.map((ripgrepMatch: RipgrepMatch) => ripgrepMatch.location);
+	return getFileMethodLocations(files, search);
 };
 
 export class DefinitionProviderImpl implements vscode.DefinitionProvider {
@@ -74,6 +78,19 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 					`**/${fileName}.path`,
 					`<td>(${locatorName})</td>`,
 				);
+			case 'variable':
+				const [, variableName] = token.matches;
+
+				const variableLocations = await getFileMethodLocations(
+					[document.uri],
+					`var (${variableName}) `,
+				);
+
+				return variableLocations
+					.filter((location) =>
+						location.range.start.isBefore(position),
+					)
+					.pop();
 		}
 	}
 }
