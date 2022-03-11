@@ -1,45 +1,21 @@
 import { inRange as _inRange } from 'lodash';
-import * as vscode from 'vscode';
 
-type TokenType =
-	| 'className'
-	| 'methodInvocation'
-	| 'pathFileName'
-	| 'pathLocator'
-	| 'variable';
+const tokenPatternMap = {
+	// matches "${vari|able}"
+	variable: /\$\{([A-Za-z_]+)\}/g,
+	// matches "PathFile"
+	// matches "PathFile|Name.LOCATOR_NAME"
+	pathFileName: /"([A-Z][A-Za-z]+)/g,
+	// matches PathFileName.LOCATOR_N|AME
+	pathLocator: /"([A-Z][A-Za-z]+)#([A-Z][A-Z_-]+)"/g,
+	// matches: Class|Name
+	// matches Class|Name.methodName
+	className: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,
+	// matches ClassName.method|Name
+	methodInvocation: /[^\w\.]([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
+};
 
-const tokenTypePatternMap: {
-	pattern: RegExp;
-	type: TokenType;
-}[] = [
-	{
-		// matches "${vari|able}"
-		pattern: /\$\{([A-Za-z_]+)\}/g,
-		type: 'variable',
-	},
-	{
-		// matches "PathFile"
-		// matches "PathFile|Name.LOCATOR_NAME"
-		pattern: /"([A-Z][A-Za-z]+)/g,
-		type: 'pathFileName',
-	},
-	{
-		// matches PathFileName.LOCATOR_N|AME
-		pattern: /"([A-Z][A-Za-z]+)#([A-Z][A-Z_-]+)"/g,
-		type: 'pathLocator',
-	},
-	{
-		// matches: Class|Name
-		// matches Class|Name.methodName
-		pattern: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,
-		type: 'className',
-	},
-	{
-		// matches ClassName.method|Name
-		pattern: /[^\w\.]([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
-		type: 'methodInvocation',
-	},
-];
+type TokenType = keyof typeof tokenPatternMap;
 
 interface Token {
 	matches: string[];
@@ -72,11 +48,13 @@ export const getToken = (
 	text: string,
 	currentIndex: number,
 ): Token | undefined => {
-	for (const { type, pattern } of tokenTypePatternMap) {
+	for (const key of Object.keys(tokenPatternMap)) {
+		const type = key as TokenType;
+
 		let matches = getTextMatchesUnderCursor(
 			text,
 			currentIndex,
-			new RegExp(pattern),
+			new RegExp(tokenPatternMap[type]),
 		);
 
 		if (matches !== undefined) {
