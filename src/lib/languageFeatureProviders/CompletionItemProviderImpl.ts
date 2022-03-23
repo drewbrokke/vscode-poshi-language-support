@@ -190,7 +190,7 @@ export class CompletionItemProviderImpl
 
 		const matches: RipgrepMatch[] = await ripgrepMatches({
 			search: '(?:macro|function) ([_a-zA-Z]+)',
-			paths: [uris[0].fsPath],
+			paths: uris.map((uri) => uri.fsPath),
 		});
 
 		return _chain(matches)
