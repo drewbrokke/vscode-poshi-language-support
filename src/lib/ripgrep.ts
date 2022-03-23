@@ -18,14 +18,12 @@ export interface RipgrepMatch {
 }
 
 export async function ripgrep(ripgrepArgs: RipgrepArgs): Promise<string[]> {
-	const { args = [], globs, paths, search } = ripgrepArgs;
+	const { args = [], globs = [], paths, search } = ripgrepArgs;
 
 	const totalArgs = [...args];
 
-	if (!!globs && globs.length) {
-		for (const glob of globs) {
-			totalArgs.push('--glob', glob);
-		}
+	for (const glob of globs) {
+		totalArgs.push('--glob', glob);
 	}
 
 	const ripgrepProcess = spawn(
