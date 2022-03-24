@@ -8,6 +8,10 @@ const tokenPatternMap = {
 	pathFileName: /"([A-Z][A-Za-z]+)/g,
 	// matches PathFileName.LOCATOR_N|AME
 	pathLocator: /"([A-Z][A-Za-z]+)#([A-Z][A-Z_-]+)"/g,
+	// matches "UtilClass"
+	utilClass: /[^\w\.][^Test]([A-Z][A-Za-z]+Util)[\.]/g,
+	// matches "UtilClass.methodName"
+	utilClassMethod: /[^\w\.][^Test]([A-Z][A-Za-z]+Util)\.([A-Za-z_][A-Za-z]+)/g,
 	// matches: Class|Name
 	// matches Class|Name.methodName
 	className: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,

@@ -100,6 +100,17 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 					`**/poshi-runner/**/selenium/BaseWebDriverImpl.java`,
 					`public (void|String|boolean|TargetLocator|Options|int) ${token.matches[2]}`,
 				);
+			case 'utilClass':
+				return getFileLocations(
+					`**/poshi/**/${token.matches[1]}.java`,
+				);
+			case 'utilClassMethod':
+				const [, utilFileName, utilMethodName] = token.matches;
+
+				return getMethodLocations(
+					`**/poshi/**/${utilFileName}.java`,
+					`public static (void|String|boolean|int) ${utilMethodName}`,
+				);
 		}
 	}
 }
