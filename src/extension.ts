@@ -5,15 +5,14 @@ import { DefinitionProviderImpl } from './lib/languageFeatureProviders/Definitio
 import { DocumentFormattingEditProviderImpl } from './lib/languageFeatureProviders/DocumentFormattingEditProviderImpl';
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log(
-		'Registering language feature providers...',
-	);
+	console.log('Registering language feature providers...');
 
 	context.subscriptions.push(
 		vscode.languages.registerCompletionItemProvider(
 			{ pattern: '**/*.{function,macro,testcase}' },
 			new CompletionItemProviderImpl(context),
 			'.',
+			'#',
 			' ',
 		),
 	);

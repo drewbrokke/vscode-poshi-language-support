@@ -3,7 +3,8 @@ import { chain as _chain } from 'lodash';
 import { ripgrep, RipgrepMatch, ripgrepMatches } from '../ripgrep';
 import { isCompletionEnabled } from '../configurationProvider';
 
-const classNamePattern = /\b[A-Z][A-Za-z]+/g;
+const classNamePattern = /\b([A-Z][A-Za-z]+)/g;
+const pathNamePattern = /"([A-Z][A-Za-z]+)/g;
 
 function isCompleteProperty(
 	lineText: vscode.TextLine,
@@ -12,11 +13,12 @@ function isCompleteProperty(
 	return lineText.text.trimLeft().startsWith('property');
 }
 
-function getFunctionOrMacroFileBaseName(
+function getPatternMatch(
 	lineText: vscode.TextLine,
 	position: vscode.Position,
+	pattern: RegExp,
 ) {
-	const matches = lineText.text.matchAll(new RegExp(classNamePattern));
+	const matches = lineText.text.matchAll(new RegExp(pattern));
 
 	let result = null;
 
@@ -25,7 +27,7 @@ function getFunctionOrMacroFileBaseName(
 			match.index &&
 			match.index + match[0].length === position.character - 1
 		) {
-			result = match[0];
+			result = match[1];
 
 			break;
 		}
@@ -46,6 +48,21 @@ const getFunctionCompletionItem = (label: string) => {
 	snippetString.appendText('(');
 	snippetString.appendTabstop();
 	snippetString.appendText(');');
+
+	completionItem.insertText = snippetString;
+
+	return completionItem;
+};
+
+const getLocatorCompletionItem = (label: string) => {
+	const completionItem = new vscode.CompletionItem(
+		label,
+		vscode.CompletionItemKind.Field,
+	);
+
+	const snippetString = new vscode.SnippetString();
+
+	snippetString.appendText(label);
 
 	completionItem.insertText = snippetString;
 
@@ -122,19 +139,36 @@ export class CompletionItemProviderImpl
 		}
 
 		if (context.triggerCharacter === '.') {
-			const functionOrMacroFileBaseName = getFunctionOrMacroFileBaseName(
+			const functionOrMacroFileBaseName = getPatternMatch(
 				line,
 				position,
+				classNamePattern,
 			);
 
 			if (!!functionOrMacroFileBaseName) {
-				const functionOrMacroNames =
-					await this._getFunctionOrMacroNames(
-						functionOrMacroFileBaseName,
-					);
+				const functionOrMacroNames = await this._getItems(
+					`**/${functionOrMacroFileBaseName}.{function,macro}`,
+					'(?:macro|function) ([_a-zA-Z]+)',
+				);
 
 				return new vscode.CompletionList(
 					functionOrMacroNames.map(getFunctionCompletionItem),
+					false,
+				);
+			}
+		}
+
+		if (context.triggerCharacter === '#') {
+			const pathName = getPatternMatch(line, position, pathNamePattern);
+
+			if (!!pathName) {
+				const locatorNames = await this._getItems(
+					`**/${pathName}.path`,
+					'<td>([A-Z][A-Z_-]+)</td>',
+				);
+
+				return new vscode.CompletionList(
+					locatorNames.map(getLocatorCompletionItem),
 					false,
 				);
 			}
@@ -181,15 +215,11 @@ export class CompletionItemProviderImpl
 		return results;
 	}
 
-	private async _getFunctionOrMacroNames(
-		functionOrMacroFileBaseName: string,
-	): Promise<string[]> {
-		const uris: vscode.Uri[] = await vscode.workspace.findFiles(
-			`**/${functionOrMacroFileBaseName}.{function,macro}`,
-		);
+	private async _getItems(glob: string, search: string): Promise<string[]> {
+		const uris: vscode.Uri[] = await vscode.workspace.findFiles(glob);
 
 		const matches: RipgrepMatch[] = await ripgrepMatches({
-			search: '(?:macro|function) ([_a-zA-Z]+)',
+			search: search,
 			paths: uris.map((uri) => uri.fsPath),
 		});
 
