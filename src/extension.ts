@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { CompletionItemProviderImpl } from './lib/languageFeatureProviders/CompletionItemProviderImpl';
 import { DefinitionProviderImpl } from './lib/languageFeatureProviders/DefinitionProviderImpl';
 import { DocumentFormattingEditProviderImpl } from './lib/languageFeatureProviders/DocumentFormattingEditProviderImpl';
+import { ReferenceProviderImpl } from './lib/languageFeatureProviders/ReferenceProviderImpl';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Registering language feature providers...');
@@ -22,6 +23,12 @@ export function activate(context: vscode.ExtensionContext) {
 				pattern: '**/*.{function,macro,testcase}',
 			},
 			new DefinitionProviderImpl(),
+		),
+	);
+	context.subscriptions.push(
+		vscode.languages.registerReferenceProvider(
+			{ pattern: '**/*.{function,macro,path}' },
+			new ReferenceProviderImpl(),
 		),
 	);
 	context.subscriptions.push(
