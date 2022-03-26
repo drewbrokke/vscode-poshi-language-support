@@ -13,6 +13,7 @@ const tokenPatternMap = {
 	className: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,
 	// matches ClassName.method|Name
 	methodInvocation: /[^\w\.]([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
+	methodDefinition: /(?:macro|function) ([A-Za-z_][A-Za-z]+) \{/g,
 };
 
 type TokenType = keyof typeof tokenPatternMap;
