@@ -91,6 +91,15 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 						location.range.start.isBefore(position),
 					)
 					.pop();
+			case 'liferaySelenium':
+				return getFileLocations(
+					`**/poshi-runner/**/selenium/BaseWebDriverImpl.java`,
+				);
+			case 'liferaySeleniumMethod':
+				return getMethodLocations(
+					`**/poshi-runner/**/selenium/BaseWebDriverImpl.java`,
+					`public (void|String|boolean|TargetLocator|Options|int) ${token.matches[2]}`,
+				);
 		}
 	}
 }

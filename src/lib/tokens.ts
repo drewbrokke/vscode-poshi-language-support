@@ -14,6 +14,10 @@ const tokenPatternMap = {
 	// matches ClassName.method|Name
 	methodInvocation: /[^\w\.]([A-Z][A-Za-z]+)\.([A-Za-z_][A-Za-z]+)/g,
 	methodDefinition: /(?:macro|function) ([A-Za-z_][A-Za-z]+) \{/g,
+	// matches "selenium"
+	liferaySelenium: /[^\w\.](selenium)[\.]/g,
+	// matches "selenium.method|Name"
+	liferaySeleniumMethod: /[^\w\.](selenium)\.([A-Za-z_][A-Za-z]+)/g,
 };
 
 type TokenType = keyof typeof tokenPatternMap;
