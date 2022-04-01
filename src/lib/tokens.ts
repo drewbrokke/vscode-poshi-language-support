@@ -11,7 +11,8 @@ const tokenPatternMap = {
 	// matches "UtilClass"
 	utilClass: /[^\w\.][^Test]([A-Z][A-Za-z]+Util)[\.]/g,
 	// matches "UtilClass.methodName"
-	utilClassMethod: /[^\w\.][^Test]([A-Z][A-Za-z]+Util)\.([A-Za-z_][A-Za-z]+)/g,
+	utilClassMethod:
+		/[^\w\.][^Test]([A-Z][A-Za-z]+Util)\.([A-Za-z_][A-Za-z]+)/g,
 	// matches: Class|Name
 	// matches Class|Name.methodName
 	className: /[^\w\.]([A-Z][A-Za-z]+)[\(\.]/g,

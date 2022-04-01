@@ -101,9 +101,7 @@ export class DefinitionProviderImpl implements vscode.DefinitionProvider {
 					`public .* ${token.matches[2]}`,
 				);
 			case 'utilClass':
-				return getFileLocations(
-					`**/poshi/**/${token.matches[1]}.java`,
-				);
+				return getFileLocations(`**/poshi/**/${token.matches[1]}.java`);
 			case 'utilClassMethod':
 				const [, utilFileName, utilMethodName] = token.matches;
 
