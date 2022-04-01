@@ -7,7 +7,7 @@
 	},
 	"displayName": "poshi-language-support",
 	"description": "Language Features for Liferay's Poshi Language",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"engines": {
 		"vscode": "^1.64.0"
 	},
