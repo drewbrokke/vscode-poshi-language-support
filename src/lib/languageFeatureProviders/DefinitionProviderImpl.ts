@@ -7,7 +7,7 @@ import { getToken } from '../tokens';
 const getFileLocations = async (
 	glob: string,
 ): Promise<vscode.Location[] | undefined> => {
-	const files = await vscode.workspace.findFiles(glob);
+	const files = await vscode.workspace.findFiles(glob,'{**/sdk/**,**/poshi/core/dependencies/**,**/poshi/poshi-runner-resources/**}');
 
 	if (files.length === 0) {
 		return;
@@ -31,7 +31,7 @@ const getMethodLocations = async (
 	glob: string,
 	search: string,
 ): Promise<vscode.Location[] | undefined> => {
-	const files = await vscode.workspace.findFiles(glob);
+	const files = await vscode.workspace.findFiles(glob,'{**/sdk/**,**/poshi/core/dependencies/**,**/poshi/poshi-runner-resources/**}');
 
 	if (files.length === 0) {
 		return;
